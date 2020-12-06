@@ -1,0 +1,29 @@
+@import "color_scale2.less";
+
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+
+  .wrapper {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+
+    div {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      each(@color, {
+        &:nth-child(@{index}) {background-color: @value}
+      });
+    }
+  }
+
+}
+

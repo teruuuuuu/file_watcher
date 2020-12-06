@@ -1,0 +1,85 @@
+@import "color_scale2.less";
+
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  // background-color: extract(@color, 1);
+  background-color: #ecf0f1;
+
+  .wrapper {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    color: extract(@color, 20);
+
+    .watch {
+      height: -webkit-fill-available;
+      background-color: extract(@color, 1);
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 40px 1fr;
+      div {
+        display: flex;
+        padding: 8px;
+      }
+
+      .watch_select {
+        label {
+          padding-top: 2px;
+        }
+        input {
+          height: 40px;
+        }
+      }
+
+      #watch_textarea {
+        padding-top: 3px;
+        box-sizing: border-box;
+        width: 100%;
+        background-color: extract(@color, 15);
+        color: #000;
+
+        overflow-y: hidden;
+        line-break: anywhere;
+        display: list-item;
+
+        div {
+          padding: 0px;
+        }
+
+        .textLine {
+          display: grid;
+          grid-template-columns: 40px 1fr;
+        }
+      }
+    }
+
+    .find {
+      background-color: extract(@color, 2);
+      display: grid;
+      grid-template-rows: 20px 1fr 30px 1fr;
+      overflow: hidden;
+
+      div {
+        margin: 0;
+        padding: 0;
+
+        button {
+          height: 30px;
+          width: 100%;
+          vertical-align: sub;
+        }
+        textarea {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
+  }
+
+}

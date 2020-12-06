@@ -1,0 +1,17 @@
+{
+  "presets": [
+    "minify",
+    [
+      "@babel/preset-env",
+      {
+        "modules": false,
+        "targets": {
+          "node": true
+        }
+      }
+    ]
+  ],
+  "plugins": [
+    "@babel/plugin-syntax-dynamic-import"
+  ]
+}
