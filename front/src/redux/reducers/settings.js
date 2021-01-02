@@ -1,6 +1,9 @@
 import { SAVE_SETTING, DEL_SETTING } from "../actionTypes"
 
-const initialState = []
+import { FileSetting } from '../../class/FileSetting'
+
+const initialState = [
+]
 
 export default function (state = initialState, action) {
   switch (action.type) {

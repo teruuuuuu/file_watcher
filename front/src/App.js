@@ -1,12 +1,15 @@
+/*global ENV */
 import * as React from 'react'
 import Header from './components/Header'
 import ContentsArea from './components/ContentsArea'
 import { connect } from 'react-redux'
 import { KeyPressHandler } from './event/keypressHandler'
+import { WS } from './Ws/Ws'
 
 import './style/global.less'
 
 export const keyPressHandler = new KeyPressHandler(window.document)
+export const env = ENV
 
 export class App extends React.Component {
   constructor(props) {
@@ -30,3 +33,5 @@ const mapStateToProps = state => {
 export default connect(
   mapStateToProps,
 )(App)
+
+export const ws = new WS(env.WsUrl, env.hbInterval)

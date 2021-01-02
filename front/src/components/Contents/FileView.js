@@ -1,8 +1,7 @@
 import React from 'react'
 import * as ReactDOM from 'react-dom'
-import cx from "classnames"
-
-import { keyPressHandler } from '../../App'
+import cx from 'classnames'
+import { keyPressHandler, ws } from '../../App'
 
 export class FileView extends React.Component {
   constructor(props) {
@@ -15,18 +14,22 @@ export class FileView extends React.Component {
       showFind: false,
       findContent: [],
       findViewIndex: 0,
-      forcusIsFile: true
+      forcusIsFile: true,
+      bottomRequested: false
     }
 
     this.keyPressHandler = keyPressHandler
     this.keyEvent = (e) => this.keyPress(e)
+    ws.addReadResultHandler((readResult) => this.readResultMethod(readResult))
   }
 
   componentDidMount() {
+
     this.keyPressHandler.addHandler(this.keyEvent)
     if (this.props.setting.tail) {
       this.tail()
     }
+    // this.props.readFile(50)
   }
 
   componentWillUnmount() {
@@ -34,9 +37,20 @@ export class FileView extends React.Component {
   }
 
   componentDidUpdate() {
+    console.log("update file view")
     if (this.props.setting.tail) {
       this.tail()
     }
+  }
+
+  readResultMethod(readResult) {
+    if (this.props.isActive) {
+      console.info(readResult)
+      this.setState({ fileContent: this.state.fileContent.concat(readResult.lines) })
+    } else {
+      this.setState({ fileContent: [] })
+    }
+    this.setState({ bottomRequested: false })
   }
 
   tab() {
@@ -61,7 +75,7 @@ export class FileView extends React.Component {
     return (
       <div style={{ display: "grid", gridTemplateColumns: "1fr ".repeat([showFile, showSetting, showFind].filter(a => a).length).trim(), backgroundColor: "#CCC", margin: "8px", padding: "2px", paddingTop: "15px", overflow: "hidden" }}>
         <div className="fileScroll" style={{ display: showFile ? "block" : "none", backgroundColor: "black", lineBreak: "anywhere", color: "#aef3a9", border: forcusIsFile ? "3px solid rgb(34 102 255)" : "1px solid #AAA", lineHeight: "16px", overflow: "hidden" }}>
-          {fileContent.slice(fileViewIndex).map((content, i) => <div key={i} style={{ marginTop: "3px" }}>{content}</div>)}
+          {fileContent.slice(fileViewIndex).map((content, i) => <div key={i} style={{ marginTop: "3px", minHeight: "16px" }}>{content}</div>)}
         </div>
         <div style={{ display: showSetting ? "grid" : "none", backgroundColor: "white", border: "1px solid #AAA", gridTemplateRows: "1fr 30px" }}>
           <textarea style={{ resize: "none" }}></textarea>
@@ -117,6 +131,10 @@ export class FileView extends React.Component {
       } else if (e.key == "j" && !tail) {
         if (showFile && forcusIsFile && fileContent.length > fileViewIndex + 1) {
           this.setState({ fileViewIndex: fileViewIndex + 1 })
+          if (fileContent.length - fileViewIndex < 25 && !this.state.bottomRequested) {
+            this.props.readFile(50)
+            this.setState({ bottomRequested: true })
+          }
         } else if (showFind && !forcusIsFile && findContent.length > findViewIndex + 1) {
           this.setState({ findViewIndex: findViewIndex + 1 })
         }

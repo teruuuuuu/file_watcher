@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import * as ReactDOM from 'react-dom'
 import cx from "classnames"
 
-
 export class SettingItem extends React.Component {
   constructor(props) {
     super(props)
@@ -33,7 +32,7 @@ export class SettingItem extends React.Component {
       if (this.state.setting.id == -1) {
         this.setState(Object.assign({}, this.state, {
           setting: Object.assign({}, this.state.setting, {
-            name: "新規追加", isSftp: false, host: "", port: 22, user: "", password: "", filePath: "", tail: false
+            name: "新規追加", isSftp: false, host: "", port: 22, user: "", password: "", filePath: "", charCode: "UTF-8", tail: false
           })
         }))
       }
@@ -67,7 +66,7 @@ export class SettingItem extends React.Component {
     )
   }
   openView() {
-    const { id, name, isSftp, host, port, user, password, filePath, tail } = this.state.setting
+    const { id, name, isSftp, host, port, user, password, filePath, charCode, tail } = this.state.setting
     const { leftPosi, topPosi } = this.state
     return (
       <div className={cx(
@@ -75,7 +74,7 @@ export class SettingItem extends React.Component {
       )} style={{
         transitionDuration: "300ms", zIndex: "1000",
         transform: `translateX(${-leftPosi + (window.innerWidth - 500) / 2}px) translateY(${-topPosi + 28}px)`,
-        top: `${topPosi}px`, left: `${leftPosi}px`, width: "500px", height: "380px", backgroundColor: "#f3a683"
+        top: `${topPosi}px`, left: `${leftPosi}px`, width: "500px", height: "400px", backgroundColor: "#f3a683"
       }} >
         <div style={{ margin: "30px", margin: "30px", fontSize: "18px", position: "static" }}>
           <div style={{ display: "grid", gridTemplateColumns: "80px 1fr" }}>
@@ -119,6 +118,12 @@ export class SettingItem extends React.Component {
             <label style={{ textAlign: "right" }}>FilePath:</label>
             <input type="text" style={{ marginLeft: "20px", width: "335px", height: "25px", border: "none" }}
               value={filePath} onChange={(e) => this.setFilePath(e.target.value)}
+            />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "80px 1fr", marginTop: "5px" }}>
+            <label style={{ textAlign: "right" }}>CharCode:</label>
+            <input type="text" style={{ marginLeft: "20px", width: "335px", height: "25px", border: "none" }}
+              value={charCode} onChange={(e) => this.setCharCode(e.target.value)}
             />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "80px 1fr", marginTop: "5px" }}>
@@ -175,6 +180,11 @@ export class SettingItem extends React.Component {
   setFilePath(filePath) {
     this.setState(Object.assign({}, this.state, {
       setting: Object.assign({}, this.state.setting, { filePath: filePath })
+    }))
+  }
+  setCharCode(charCode) {
+    this.setState(Object.assign({}, this.state, {
+      setting: Object.assign({}, this.state.setting, { charCode: charCode })
     }))
   }
   setTail(tail) {

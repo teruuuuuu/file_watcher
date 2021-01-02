@@ -1,0 +1,4 @@
+{
+  "WsUrl": "ws://localhost:8123/connect",
+  "hbInterval": 10000
+}

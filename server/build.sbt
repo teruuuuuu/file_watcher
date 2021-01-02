@@ -9,6 +9,7 @@ libraryDependencies ++= {
   val akkaVersion = "2.5.4"
   val akkaHttpVersion = "10.0.10"
   Seq(
+    "com.hierynomus" % "sshj" % "0.30.0",
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     //<start id="stream-dependencies">
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,

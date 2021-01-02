@@ -4,11 +4,32 @@ import { connect } from 'react-redux'
 import { SettingItem } from './Contents/SettingItem'
 import { saveSetting, delSetting, addTab, delTab } from '../redux/actions'
 import { FileView } from './Contents/FileView'
+import { FileSetting } from '../class/FileSetting'
+import { ReadRequest } from '../class/ReadRequest'
+
+import { ws } from '../App'
 
 class ContentsArea extends React.Component {
   constructor(props) {
     super(props)
     const state = {}
+  }
+
+  componentDidUpdate(prevProps) {
+    console.info(this.props)
+    if (this.props.tabs.activeId != prevProps.tabs.activeId) {
+      console.log("tab changed")
+      const { settings, tabs } = this.props
+      const activeSetting = settings.find(setting => setting.id == tabs.activeId) || new FileSetting({ id: -1 })
+      ws.sendSettingFile(activeSetting)
+      if (!activeSetting.tail) {
+        this.readFile(50)
+      }
+    }
+  }
+
+  readFile(lineNum) {
+    ws.sendReadRequest(new ReadRequest({ isBottom: true, lineNum: lineNum }))
   }
 
   delSetting(settingId) {
@@ -30,7 +51,7 @@ class ContentsArea extends React.Component {
         <div className="list-item">
           {
             settings.map((setting) => <SettingItem key={setting.id} setting={setting} isAdd={false} del={(id) => this.delSetting(id)} saveSetting={(setting) => this.saveSetting(setting)} open={(settingId) => this.addTab(settingId)} />).concat(
-              <SettingItem key={-1} setting={{ id: -1, name: "新規追加", isSftp: false, host: "", port: 22, user: "", password: "", filePath: "", tail: false }}
+              <SettingItem key={-1} setting={new FileSetting({ id: -1, name: "新規追加", isSftp: false, host: "", port: 22, user: "", password: "", filePath: "", charCode: "UTF-8", tail: false })}
                 isAdd={true} del={(id) => this.delSetting(id)} saveSetting={(setting) => this.saveSetting(setting)} open={(settingId) => this.addTab(settingId)} />
             )
           }
@@ -44,7 +65,7 @@ class ContentsArea extends React.Component {
     return (
       <div className="file-view-area" style={{ display: tabs.activeId != -1 ? "block" : "none" }}>
         {tabs.ids.filter(id => id != -1).map(id =>
-          <FileView key={id} setting={settings.find(setting => setting.id == id)} isActive={id == tabs.activeId}></FileView>)}
+          <FileView key={id} setting={settings.find(setting => setting.id == id)} isActive={id == tabs.activeId} readFile={(lineNum) => this.readFile(lineNum)}></FileView>)}
       </div>
     )
   }

@@ -1,4 +1,5 @@
 const webpack = require('webpack');
+const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
@@ -74,6 +75,10 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: "./index.html"
     }),
+    new webpack.DefinePlugin({
+      // jsonの設定ファイルを読み込んで環境変数にセットする
+      ENV: JSON.stringify(require(path.resolve(__dirname, './env/default.json'))),
+    })
   ],
   devServer: {
     open: true,
