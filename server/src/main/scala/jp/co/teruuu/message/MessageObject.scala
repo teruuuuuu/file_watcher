@@ -15,7 +15,7 @@ object MessageObject extends DefaultJsonProtocol {
 
   def fromString(jsonStr: String):MessageObject = {
     jsonStr.split(RecordSeparator).toList match {
-      case "HeartBeat" :: data :: Nil => data.parseJson.convertTo[HeartBeat]
+      case "HeartBeat" :: json :: Nil => json.parseJson.convertTo[HeartBeat]
       case "SelectFile" :: json :: Nil => json.parseJson.convertTo[SelectFile]
       case "ReadRequest" :: json :: Nil => json.parseJson.convertTo[ReadRequest]
       case "ReadResult" :: json :: Nil => json.parseJson.convertTo[ReadResult]
@@ -39,6 +39,7 @@ object MessageObject extends DefaultJsonProtocol {
 
 trait MessageObject {
   val `type`:String = ""
+  def isFileEvent = false
 }
 
 case class HeartBeat(var count: Int) extends MessageObject {self=>
@@ -58,10 +59,12 @@ case class InvalidMessage() extends MessageObject {
 case class SelectFile(id: Int, name: String, isSftp: Boolean, host: String, port: Int,
                       user: String, password: String, filePath: String, charCode: String, tail: Boolean) extends MessageObject {self=>
   override val `type` = "SelectFile"
+  override def isFileEvent = true
 }
 
 case class ReadRequest(isBottom: Boolean, lineNum: Int) extends MessageObject {
   override val `type` = "ReadRequest"
+  override def isFileEvent = true
 }
 
 case class ReadResult(isBottom: Boolean, lines: List[String]) extends MessageObject {

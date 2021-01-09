@@ -5,9 +5,6 @@ import { SettingItem } from './Contents/SettingItem'
 import { saveSetting, delSetting, addTab, delTab } from '../redux/actions'
 import { FileView } from './Contents/FileView'
 import { FileSetting } from '../class/FileSetting'
-import { ReadRequest } from '../class/ReadRequest'
-
-import { ws } from '../App'
 
 class ContentsArea extends React.Component {
   constructor(props) {
@@ -16,43 +13,33 @@ class ContentsArea extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    console.info(this.props)
-    if (this.props.tabs.activeId != prevProps.tabs.activeId) {
-      console.log("tab changed")
-      const { settings, tabs } = this.props
-      const activeSetting = settings.find(setting => setting.id == tabs.activeId) || new FileSetting({ id: -1 })
-      ws.sendSettingFile(activeSetting)
-      if (!activeSetting.tail) {
-        this.readFile(50)
-      }
-    }
-  }
-
-  readFile(lineNum) {
-    ws.sendReadRequest(new ReadRequest({ isBottom: true, lineNum: lineNum }))
   }
 
   delSetting(settingId) {
     this.props.delTab(settingId)
     this.props.delSetting(settingId)
   }
-  saveSetting(setting) {
-    this.props.saveSetting(setting)
+  saveSetting(setting, isOpen) {
+    const settingIdGen = (settingId) => settingId == -1 ? this.props.settings.map(a => a.id).concat(-1).reduce((a, b) => Math.max(a, b)) + 1 : settingId
+    this.props.saveSetting(Object.assign({}, setting, { id: settingIdGen(setting.id) }), isOpen)
+
   }
 
   addTab(settingId) {
-    this.props.addTab(settingId == -1 ? this.props.settings.map(a => a.id).concat(-1).reduce((a, b) => Math.max(a, b)) + 1 : settingId)
+    this.props.addTab(settingId)
   }
 
   settingView() {
     const { settings, tabs } = this.props
+    const delMehtod = id => this.delSetting(id)
+    const saveMethod = (setting, isOpen) => this.saveSetting(setting, isOpen)
     return (
       <div className="setting-area" style={{ display: tabs.activeId == -1 ? "block" : "none" }}>
         <div className="list-item">
           {
-            settings.map((setting) => <SettingItem key={setting.id} setting={setting} isAdd={false} del={(id) => this.delSetting(id)} saveSetting={(setting) => this.saveSetting(setting)} open={(settingId) => this.addTab(settingId)} />).concat(
+            settings.map((setting) => <SettingItem key={setting.id} setting={setting} isAdd={false} del={delMehtod} saveSetting={saveMethod} open={(settingId) => this.addTab(settingId)} />).concat(
               <SettingItem key={-1} setting={new FileSetting({ id: -1, name: "新規追加", isSftp: false, host: "", port: 22, user: "", password: "", filePath: "", charCode: "UTF-8", tail: false })}
-                isAdd={true} del={(id) => this.delSetting(id)} saveSetting={(setting) => this.saveSetting(setting)} open={(settingId) => this.addTab(settingId)} />
+                isAdd={true} del={delMehtod} saveSetting={saveMethod} open={(settingId) => this.addTab(settingId)} />
             )
           }
         </div>
@@ -65,7 +52,7 @@ class ContentsArea extends React.Component {
     return (
       <div className="file-view-area" style={{ display: tabs.activeId != -1 ? "block" : "none" }}>
         {tabs.ids.filter(id => id != -1).map(id =>
-          <FileView key={id} setting={settings.find(setting => setting.id == id)} isActive={id == tabs.activeId} readFile={(lineNum) => this.readFile(lineNum)}></FileView>)}
+          <FileView key={id} setting={settings.find(setting => setting.id == id)} isActive={id == tabs.activeId}></FileView>)}
       </div>
     )
   }
@@ -84,7 +71,7 @@ const mapStateToProps = state => {
   const { settings, tabs } = state
   return { settings, tabs }
 }
-// export default VisibilityFilters;
+
 export default connect(
   mapStateToProps,
   { saveSetting, delSetting, addTab, delTab }

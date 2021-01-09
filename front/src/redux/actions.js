@@ -1,8 +1,9 @@
 import { SAVE_SETTING, DEL_SETTING, ADD_TAB, DEL_TAB, CHANGE_TAB } from "./actionTypes"
 
-export const saveSetting = setting => ({
+export const saveSetting = (setting, isOpen) => ({
   type: SAVE_SETTING,
-  setting: setting
+  setting: setting,
+  isOpen: isOpen
 })
 
 export const delSetting = settingId => ({

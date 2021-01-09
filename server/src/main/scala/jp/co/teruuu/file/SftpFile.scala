@@ -15,7 +15,7 @@ class SftpFile(host: String, port: Int, user: String, password: String, filePath
   var lineIndex = 0
   val buf = new Array[Byte](1024)
 
-  def readLines(length: Int): List[String] = {
+  override def readLines(length: Int): List[String] = {
     if(length > 0) {
       readOneLine() match {
         case Some(s) => s :: readLines(length - 1)
@@ -71,7 +71,7 @@ class SftpFile(host: String, port: Int, user: String, password: String, filePath
     ssh
   }
 
-  def close(): Unit = {
+  override def close(): Unit = {
     file.close()
     sftpClient.close()
     sshClient.close()

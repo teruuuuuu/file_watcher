@@ -9,7 +9,7 @@ import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, FlowShape, OverflowStrategy}
 import jp.co.teruuu.file.WatchReader
-import jp.co.teruuu.message.{HeartBeat, MessageObject, ReadRequest, ReadResult, SelectFile}
+import jp.co.teruuu.message.{HeartBeat, MessageObject}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -59,29 +59,24 @@ class ClientHandlerActor extends Actor {
   implicit val as = context.system
   implicit val am = ActorMaterializer()
 
-  val tailCallback = (readResult:List[String]) => {
-    down ! MessageObject.toMessage(ReadResult(isBottom = true, readResult))
-  }
-  val watchReader = new WatchReader(tailCallback)
-
   val (down, publisher) = Source
-    .actorRef[String](1000, OverflowStrategy.fail)
+    .actorRef[String](10000, OverflowStrategy.fail)
     .toMat(Sink.asPublisher(fanout = false))(Keep.both)
     .run()
+  val watchReader = new WatchReader(down)
+
 
   // keepalive
   val counter = HeartBeat.apply(0)
-  as.scheduler.schedule(0.seconds, 30.second, new Runnable {
-    override def run() = {
-      down ! MessageObject.toMessage(counter.countUp())
-    }
+  as.scheduler.schedule(0.seconds, 15.second, () => {
+    down ! MessageObject.toMessage(counter.countUp())
   })
 
   override def receive = {
     case GetWebsocketFlow =>
       val flow = Flow.fromGraph(GraphDSL.create() { implicit b =>
         val textMsgFlow = b.add(Flow[Message]
-          .mapAsync(1) {
+          .mapAsync(4) {
             case tm: TextMessage => Future(tm.getStrictText)
             case bm: BinaryMessage =>
               // consume the stream
@@ -99,11 +94,8 @@ class ClientHandlerActor extends Actor {
       val message = MessageObject.fromString(s)
       println(s"client actor received $message")
       message match {
-        case selectFile: SelectFile =>
-          watchReader.selectFile(selectFile)
-        case reeadRequest: ReadRequest =>
-          val readResult = watchReader.readBottom(reeadRequest.lineNum)
-          down ! MessageObject.toMessage(ReadResult(isBottom = true, readResult))
+        case fileEvent if fileEvent.isFileEvent =>
+          watchReader.addEvents(fileEvent)
         case _ => {}
       }
   }

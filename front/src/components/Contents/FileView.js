@@ -3,10 +3,78 @@ import * as ReactDOM from 'react-dom'
 import cx from 'classnames'
 import { keyPressHandler, ws } from '../../App'
 
+import { ReadRequest } from '../../class/ReadRequest'
+
 export class FileView extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {
+    this.state = this.initialState()
+    this.keyPressHandler = keyPressHandler
+    this.keyEvent = (e) => this.keyPress(e)
+    this.fileResponse = (readResult) => this.readResultMethod(readResult)
+
+    if (this.props.isActive) {
+      this.tabActive()
+    }
+  }
+
+  componentDidMount() {
+  }
+
+  componentWillUnmount() {
+    this.keyPressHandler.removeHandler(this.keyEvent)
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.isActive && !prevProps.isActive) {
+      this.tabActive()
+    } else if (!this.props.isActive && prevProps.isActive) {
+      this.tabUnActive()
+    }
+  }
+
+  tabActive() {
+    this.keyPressHandler.addHandler(this.keyEvent)
+    this.wsActive()
+  }
+
+  tabUnActive() {
+    this.keyPressHandler.removeHandler(this.keyEvent)
+    this.wsUnActive()
+    this.setState(this.initialState())
+  }
+
+  wsActive() {
+    const { setting, tail } = this.props
+    ws.addReadResultHandler(this.fileResponse)
+    ws.sendSettingFile(setting)
+
+    if (!tail) {
+      this.readFile(50)
+    }
+  }
+
+  wsUnActive() {
+    ws.removeReadResultHandler(this.fileResponse)
+  }
+
+  readFile(lineNum) {
+    ws.sendReadRequest(new ReadRequest({ isBottom: true, lineNum: lineNum }))
+  }
+
+  readResultMethod(readResult) {
+    if (this.props.isActive) {
+      console.info(readResult)
+      this.setState({ fileContent: this.state.fileContent.concat(readResult.lines) })
+      if (this.props.setting.tail) {
+        this.tail()
+      }
+    }
+    this.setState({ bottomRequested: false })
+  }
+
+  initialState() {
+    return {
       showFile: true,
       fileContent: [],
       fileViewIndex: 0,
@@ -17,40 +85,6 @@ export class FileView extends React.Component {
       forcusIsFile: true,
       bottomRequested: false
     }
-
-    this.keyPressHandler = keyPressHandler
-    this.keyEvent = (e) => this.keyPress(e)
-    ws.addReadResultHandler((readResult) => this.readResultMethod(readResult))
-  }
-
-  componentDidMount() {
-
-    this.keyPressHandler.addHandler(this.keyEvent)
-    if (this.props.setting.tail) {
-      this.tail()
-    }
-    // this.props.readFile(50)
-  }
-
-  componentWillUnmount() {
-    this.keyPressHandler.removeHandler(this.keyEvent)
-  }
-
-  componentDidUpdate() {
-    console.log("update file view")
-    if (this.props.setting.tail) {
-      this.tail()
-    }
-  }
-
-  readResultMethod(readResult) {
-    if (this.props.isActive) {
-      console.info(readResult)
-      this.setState({ fileContent: this.state.fileContent.concat(readResult.lines) })
-    } else {
-      this.setState({ fileContent: [] })
-    }
-    this.setState({ bottomRequested: false })
   }
 
   tab() {
@@ -91,7 +125,7 @@ export class FileView extends React.Component {
   render() {
     const { setting, isActive } = this.props
     return (
-      <div style={{ display: "grid", height: "100%", gridTemplateRows: "10px 1fr" }}>
+      <div style={{ display: isActive ? "grid" : "none", height: "100%", gridTemplateRows: "10px 1fr" }}>
         {this.tab()}
         {this.mainArea()}
       </div>
@@ -132,7 +166,7 @@ export class FileView extends React.Component {
         if (showFile && forcusIsFile && fileContent.length > fileViewIndex + 1) {
           this.setState({ fileViewIndex: fileViewIndex + 1 })
           if (fileContent.length - fileViewIndex < 25 && !this.state.bottomRequested) {
-            this.props.readFile(50)
+            this.readFile(50)
             this.setState({ bottomRequested: true })
           }
         } else if (showFind && !forcusIsFile && findContent.length > findViewIndex + 1) {

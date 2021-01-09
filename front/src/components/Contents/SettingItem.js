@@ -22,13 +22,13 @@ export class SettingItem extends React.Component {
     this.props.del(id)
   }
 
-  save() {
+  save(isOpen) {
     const { name, isSftp, host, port, user, password, filePath, tail } = this.state.setting
     if (name.trim().length == 0 || filePath.trim().length == 0 || (isSftp && host.trim().length == 0) ||
       (isSftp && Number.isInteger(port) && port <= 0) || (isSftp && user.trim().length == 0) || (isSftp && password.trim().length == 0)) {
       alert("入力に不備があります")
     } else {
-      this.props.saveSetting(this.state.setting)
+      this.props.saveSetting(this.state.setting, isOpen)
       if (this.state.setting.id == -1) {
         this.setState(Object.assign({}, this.state, {
           setting: Object.assign({}, this.state.setting, {
@@ -38,12 +38,6 @@ export class SettingItem extends React.Component {
       }
       this.close()
     }
-  }
-
-  open() {
-    const id = this.state.setting.id
-    this.save()
-    this.props.open(id)
   }
 
   itemView() {
@@ -68,21 +62,28 @@ export class SettingItem extends React.Component {
   openView() {
     const { id, name, isSftp, host, port, user, password, filePath, charCode, tail } = this.state.setting
     const { leftPosi, topPosi } = this.state
+
+    const inputLine = (type) => (title, value, isDisp, divStyle, labelStyle, changeF) => (
+      <div style={Object.assign({ display: isDisp ? "grid" : "none", gridTemplateColumns: "80px 1fr" }, divStyle)}>
+        <label style={Object.assign({ textAlign: "right", lineHeight: "29px" }, labelStyle)}>{title}</label>
+        <input type={type} style={{ marginLeft: "20px", width: "335px", height: "25px", border: "none" }}
+          value={value} onChange={changeF}
+        />
+      </div>
+    )
+    const textLine = inputLine("text")
+    const passwordLine = inputLine("password")
+
     return (
       <div className={cx(
         "setting-item", "open"
       )} style={{
-        transitionDuration: "300ms", zIndex: "1000",
+        transitionDuration: "300ms",
         transform: `translateX(${-leftPosi + (window.innerWidth - 500) / 2}px) translateY(${-topPosi + 28}px)`,
-        top: `${topPosi}px`, left: `${leftPosi}px`, width: "500px", height: "400px", backgroundColor: "#f3a683"
+        top: `${topPosi}px`, left: `${leftPosi}px`
       }} >
         <div style={{ margin: "30px", margin: "30px", fontSize: "18px", position: "static" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "80px 1fr" }}>
-            <label style={{ textAlign: "right" }}>名前:</label>
-            <input type="text" style={{ marginLeft: "20px", width: "335px", height: "25px", border: "none" }}
-              value={name} onChange={(e) => this.setName(e.target.value)}
-            />
-          </div>
+          {textLine("名前:", name, true, {}, {}, (e) => this.setName(e.target.value))}
           <div style={{ display: "grid", gridTemplateColumns: "80px 1fr", marginTop: "5px" }}>
             <label style={{ textAlign: "right" }}>対象:</label>
             <div style={{ width: "360px", height: "25px", border: "none", fontSize: "16px", display: "inline-flex", color: "white", textAlign: "center" }}>
@@ -90,42 +91,19 @@ export class SettingItem extends React.Component {
               <div onClick={() => this.setSftp(true)} style={{ marginLeft: "3px", width: "170px", "height": "30px", lineHeight: "30px", cursor: "pointer", backgroundColor: isSftp ? "#303952" : "#596275" }}>sftp</div>
             </div>
           </div>
-          <div style={{ display: isSftp ? "grid" : "none", gridTemplateColumns: "80px 1fr", marginTop: "5px" }}>
-            <label style={{ textAlign: "right" }}>ホスト:</label>
-            <input type="text" style={{ marginLeft: "20px", width: "335px", height: "25px", border: "none" }}
-              value={host} onChange={(e) => this.setHost(e.target.value)}
-            />
-          </div>
-          <div style={{ display: isSftp ? "grid" : "none", gridTemplateColumns: "80px 1fr", marginTop: "5px" }}>
-            <label style={{ textAlign: "right" }}>ポート:</label>
-            <input type="text" style={{ marginLeft: "20px", width: "335px", height: "25px", border: "none" }}
-              value={port} onChange={(e) => this.setPort(e.target.value)}
-            />
-          </div>
+          {textLine("ホスト:", host, isSftp, { marginTop: "5px" }, {}, (e) => this.setHost(e.target.value))}
+          {textLine("ポート:", port, isSftp, { marginTop: "5px" }, {}, (e) => this.setPort(e.target.value))}
+
           <div style={{ display: isSftp ? "grid" : "none", gridTemplateColumns: "80px 1fr", marginTop: "5px" }}>
             <label style={{ textAlign: "right" }}>ユーザ:</label>
             <input type="text" style={{ marginLeft: "20px", width: "335px", height: "25px", border: "none" }}
               value={user} onChange={(e) => this.setUser(e.target.value)}
             />
           </div>
-          <div style={{ display: isSftp ? "grid" : "none", gridTemplateColumns: "80px 1fr", marginTop: "5px" }}>
-            <label style={{ textAlign: "right", fontSize: "15px", lineHeight: "29px" }}>パスワード:</label>
-            <input type="text" style={{ marginLeft: "20px", width: "335px", height: "25px", border: "none" }}
-              value={password} onChange={(e) => this.setPassword(e.target.value)}
-            />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "80px 1fr", marginTop: "5px" }}>
-            <label style={{ textAlign: "right" }}>FilePath:</label>
-            <input type="text" style={{ marginLeft: "20px", width: "335px", height: "25px", border: "none" }}
-              value={filePath} onChange={(e) => this.setFilePath(e.target.value)}
-            />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "80px 1fr", marginTop: "5px" }}>
-            <label style={{ textAlign: "right" }}>CharCode:</label>
-            <input type="text" style={{ marginLeft: "20px", width: "335px", height: "25px", border: "none" }}
-              value={charCode} onChange={(e) => this.setCharCode(e.target.value)}
-            />
-          </div>
+          {passwordLine("パスワード:", password, isSftp, { marginTop: "5px" }, { fontSize: "15px" }, (e) => this.setPassword(e.target.value))}
+          {textLine("FilePath:", filePath, true, { marginTop: "5px" }, { fontSize: "15px" }, (e) => this.setFilePath(e.target.value))}
+          {textLine("CharCode:", charCode, true, { marginTop: "5px" }, { fontSize: "15px" }, (e) => this.setCharCode(e.target.value))}
+
           <div style={{ display: "grid", gridTemplateColumns: "80px 1fr", marginTop: "5px" }}>
             <label style={{ textAlign: "right" }}>tail:</label>
             <div style={{ width: "360px", height: "25px", border: "none", fontSize: "16px", display: "inline-flex", color: "white", textAlign: "center" }}>
@@ -136,8 +114,8 @@ export class SettingItem extends React.Component {
           <div style={{ display: "inline-flex", float: "right", marginTop: "20px", color: "white", fontSize: "20px", textAlign: "center" }}>
             <div onClick={() => this.del()} style={{ display: id != -1 ? "block" : "none", width: "80px", height: "35px", lineHeight: "35px", marginLeft: "5px", cursor: "pointer", backgroundColor: "#303952" }}>削除</div>
             <div onClick={() => this.close()} style={{ width: "80px", height: "35px", lineHeight: "35px", marginLeft: "5px", cursor: "pointer", backgroundColor: "#303952" }}>閉じる</div>
-            <div onClick={() => this.save()} style={{ width: "80px", height: "35px", lineHeight: "35px", marginLeft: "5px", cursor: "pointer", backgroundColor: "#303952" }}>保存</div>
-            <div onClick={() => this.open()} style={{ width: "80px", height: "35px", lineHeight: "35px", marginLeft: "5px", cursor: "pointer", backgroundColor: "#303952" }}>開く</div>
+            <div onClick={() => this.save(false)} style={{ width: "80px", height: "35px", lineHeight: "35px", marginLeft: "5px", cursor: "pointer", backgroundColor: "#303952" }}>保存</div>
+            <div onClick={() => this.save(true)} style={{ width: "80px", height: "35px", lineHeight: "35px", marginLeft: "5px", cursor: "pointer", backgroundColor: "#303952" }}>開く</div>
           </div>
         </div>
       </div>
@@ -149,7 +127,7 @@ export class SettingItem extends React.Component {
   }
   setName(name) {
     this.setState(Object.assign({}, this.state, {
-      setting: Object.assign({}, this.state.setting, { name: name })
+      setting: Object.assign(this.state.setting, { name: name })
     }))
   }
   setSftp(isSftp) {
@@ -164,7 +142,7 @@ export class SettingItem extends React.Component {
   }
   setPort(port) {
     this.setState(Object.assign({}, this.state, {
-      setting: Object.assign({}, this.state.setting, { port: port })
+      setting: Object.assign(this.state.setting, { port: port })
     }))
   }
   setUser(user) {
@@ -194,4 +172,3 @@ export class SettingItem extends React.Component {
   }
 }
 
-// export default SettingItem

@@ -6,15 +6,23 @@ export class WS {
   constructor(url, hbInterval) {
     this.socket = new WebSocket(url)
     this.socket.addEventListener('message', (e) => this.onMessage(e))
+    this.socket.addEventListener('close', (e) => {
+      console.log("close")
+    })
     this.counter = { count: 0 }
     setInterval(() => {
       this.sendMessage("HeartBeat", Object.assign(this.counter, { count: this.counter.count + 1 }))
-    }, hbInterval)
-    this.readResulthandlers = []
+    }, 15000)
+    this.handlers = []
   }
 
   addReadResultHandler(handler) {
-    this.readResulthandlers.push(handler)
+    this.handlers.push(handler)
+  }
+
+  removeReadResultHandler(handler) {
+    const index = this.handlers.findIndex(a => a == handler)
+    this.handlers = index >= 0 ? this.handlers.slice(0, index).concat(this.handlers.slice(index + 1)) : this.handlers
   }
 
   onMessage(e) {
@@ -22,7 +30,7 @@ export class WS {
     const message = e.data.split(RecordSeparator)
     if (message[0] == "ReadResult") {
       const readResult = new ReadResult(JSON.parse(message[1]))
-      this.readResulthandlers.forEach(handler => handler(readResult))
+      this.handlers.forEach(handler => handler(readResult))
     }
   }
 
@@ -33,7 +41,16 @@ export class WS {
     this.sendMessage("ReadRequest", readRequest)
   }
   sendMessage(type, data) {
-    this.socket.send(type + RecordSeparator + JSON.stringify(data))
+    try {
+      if (this.socket.readyState && this.socket.OPEN) {
+        this.socket.send(type + RecordSeparator + JSON.stringify(data))
+      } else {
+
+      }
+    } catch (e) {
+      console.info(e)
+    }
+
   }
 }
 

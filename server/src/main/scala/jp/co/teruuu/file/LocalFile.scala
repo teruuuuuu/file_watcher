@@ -5,18 +5,21 @@ import java.nio.charset.Charset
 import scala.io.Codec
 
 class LocalFile(filePath: String, charCode: String) extends WatchFile {
-  println("filepath:" + filePath)
+  println("filepath:" + filePath + "init start")
   var file = scala.io.Source.fromFile(filePath)
   implicit val codec = Codec.charset2codec(Charset.forName(charCode))
   val reader = file.reader()
+  println("filepath:" + filePath + "init end")
 
   var lineIndex = 0
   var buf = new Array[Char](1024)
   var bufReadOffset = 0
 
   override def close(): Unit = {
+    println("localFile close start")
     reader.close()
     file.close()
+    println("localFile close end")
   }
 
   override def readLines(lineNum: Int): List[String] = {
