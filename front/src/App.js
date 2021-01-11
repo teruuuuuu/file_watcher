@@ -5,11 +5,13 @@ import ContentsArea from './components/ContentsArea'
 import { connect } from 'react-redux'
 import { KeyPressHandler } from './event/keypressHandler'
 import { WS } from './Ws/Ws'
+import { DbService } from './repository/DbService'
 
 import './style/global.less'
 
 export const keyPressHandler = new KeyPressHandler(window.document)
 export const env = ENV
+export const dbService = new DbService()
 
 export class App extends React.Component {
   constructor(props) {
@@ -31,7 +33,7 @@ const mapStateToProps = state => {
 }
 // export default VisibilityFilters;
 export default connect(
-  mapStateToProps,
+  mapStateToProps
 )(App)
 
 export const ws = new WS(env.WsUrl, env.hbInterval)

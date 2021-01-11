@@ -5,11 +5,16 @@ import { SettingItem } from './Contents/SettingItem'
 import { saveSetting, delSetting, addTab, delTab } from '../redux/actions'
 import { FileView } from './Contents/FileView'
 import { FileSetting } from '../class/FileSetting'
+import { dbService } from '../App'
 
 class ContentsArea extends React.Component {
   constructor(props) {
     super(props)
     const state = {}
+
+    dbService.getAll(d =>
+      this.props.saveSetting(d)
+    )
   }
 
   componentDidUpdate(prevProps) {
