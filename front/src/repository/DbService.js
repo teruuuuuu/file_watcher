@@ -4,19 +4,31 @@ export class DbService {
     this.dbVersion = 1
     this.storeName = "myStore"
     this.initDbCon(this.dbName, this.dbVersion)
+    this.initActions = []
   }
 
   initDbCon(dbName, dbVersion) {
-    const request = indexedDB.open(dbName)
+    const request = indexedDB.open(dbName, dbVersion)
     request.onerror = (event) => {
       console.log("Error init db")
+      indexedDB.deleteDatabase(dbName)
     }
     request.onupgradeneeded = (event) => {
       this.dbCon = event.target.result
+      Array.from(this.dbCon.objectStoreNames).forEach(storeName =>
+        this.dbCon.deleteObjectStore(storeName)
+      )
       this.dbCon.createObjectStore(this.storeName, { keyPath: "id" })
     }
     request.onsuccess = (event) => {
       this.dbCon = event.target.result
+      while (true) {
+        if (this.initActions.length == 0) {
+          break
+        } else {
+          this.initActions.shift()()
+        }
+      }
     }
   }
   save(datas) {
@@ -43,7 +55,7 @@ export class DbService {
   }
 
   getAll(action) {
-    const cursorAction = ((action) => () => {
+    const f = ((action) => () => {
       const transaction = this.dbCon.transaction([this.storeName], "readonly")
       var objectStore = transaction.objectStore(this.storeName)
       objectStore.getAll().onsuccess = function (event) {
@@ -52,23 +64,10 @@ export class DbService {
       }
     })(action)
     if (this.dbCon) {
-      cursorAction()
+      f()
     } else {
-      setTimeout(() => cursorAction(), 100)
+      this.initActions.push(f)
     }
 
-  }
-
-  clear() {
-    this.dbCon.close()
-    const req = indexedDB.deleteDatabase(this.dbName)
-    req.onerror = function (event) {
-      console.log("Error deleting database.")
-      initFunc(this.dbName, this.dbVersion)
-    }
-    req.onsuccess = function (event) {
-      console.log("Database deleted successfully")
-      initFunc(this.dbName, this.dbVersion)
-    }
   }
 }

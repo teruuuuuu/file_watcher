@@ -6,13 +6,11 @@ export class WS {
   constructor(url, hbInterval) {
     this.socket = new WebSocket(url)
     this.socket.addEventListener('message', (e) => this.onMessage(e))
-    this.socket.addEventListener('close', (e) => {
-      console.log("close")
-    })
+    this.socket.addEventListener('close', (e) => { })
     this.counter = { count: 0 }
     setInterval(() => {
       this.sendMessage("HeartBeat", Object.assign(this.counter, { count: this.counter.count + 1 }))
-    }, 15000)
+    }, hbInterval)
     this.handlers = []
   }
 

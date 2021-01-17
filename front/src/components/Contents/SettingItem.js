@@ -1,16 +1,27 @@
 import React, { useState } from 'react'
 import * as ReactDOM from 'react-dom'
 import cx from "classnames"
+import { windowResizeHandler } from '../../App'
+
+let zIndex = 1000
 
 export class SettingItem extends React.Component {
   constructor(props) {
     super(props)
-    this.state = Object.assign({}, props, { isShow: false, leftPosi: 0, topPosi: 0 })
+    this.state = Object.assign({}, props, { isShow: false, leftPosi: 0, topPosi: 0, zIndex: zIndex })
+
+    this.windowResizeHandler = windowResizeHandler
+    this.resizeEvent = (e) => this.resize(e)
+    this.windowResizeHandler.addHandler(this.resizeEvent)
+  }
+  componentWillUnmount() {
+    this.windowResizeHandler.removeHandler(this.resizeEvent)
   }
 
   show(target) {
     const clientRect = ReactDOM.findDOMNode(this).getBoundingClientRect(target)
-    this.setState({ isShow: true, leftPosi: clientRect.left, topPosi: clientRect.top })
+    this.setState({ isShow: true, leftPosi: clientRect.left, topPosi: clientRect.top, zIndex: zIndex })
+    zIndex += 1
   }
 
   close() {
@@ -20,6 +31,12 @@ export class SettingItem extends React.Component {
   del() {
     const id = this.state.setting.id
     this.props.del(id)
+  }
+
+  resize() {
+    if (this.state.isShow) {
+      this.show(this)
+    }
   }
 
   save(isOpen) {
@@ -61,7 +78,7 @@ export class SettingItem extends React.Component {
   }
   openView() {
     const { id, name, isSftp, host, port, user, password, filePath, charCode, tail } = this.state.setting
-    const { leftPosi, topPosi } = this.state
+    const { leftPosi, topPosi, zIndex } = this.state
 
     const inputLine = (type) => (title, value, isDisp, divStyle, labelStyle, changeF) => (
       <div style={Object.assign({ display: isDisp ? "grid" : "none", gridTemplateColumns: "80px 1fr" }, divStyle)}>
@@ -80,7 +97,7 @@ export class SettingItem extends React.Component {
       )} style={{
         transitionDuration: "300ms",
         transform: `translateX(${-leftPosi + (window.innerWidth - 500) / 2}px) translateY(${-topPosi + 28}px)`,
-        top: `${topPosi}px`, left: `${leftPosi}px`
+        top: `${topPosi}px`, left: `${leftPosi}px`, zIndex: zIndex
       }} >
         <div style={{ margin: "30px", margin: "30px", fontSize: "18px", position: "static" }}>
           {textLine("名前:", name, true, {}, {}, (e) => this.setName(e.target.value))}

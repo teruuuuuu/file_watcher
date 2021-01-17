@@ -4,12 +4,14 @@ import Header from './components/Header'
 import ContentsArea from './components/ContentsArea'
 import { connect } from 'react-redux'
 import { KeyPressHandler } from './event/keypressHandler'
+import { WindowResizeHandler } from './event/WindowResizeHandler'
 import { WS } from './Ws/Ws'
 import { DbService } from './repository/DbService'
 
 import './style/global.less'
 
 export const keyPressHandler = new KeyPressHandler(window.document)
+export const windowResizeHandler = new WindowResizeHandler()
 export const env = ENV
 export const dbService = new DbService()
 
