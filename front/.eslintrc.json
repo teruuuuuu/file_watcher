@@ -1,4 +1,10 @@
 {
+  "extends": [
+    "prettier"
+  ],
+  "plugins": [
+    "prettier"
+  ],
   "parser": "babel-eslint",
   "parserOptions": {
     "ecmaVersion": 6,
@@ -8,33 +14,34 @@
     }
   },
   "rules": {
-    "indent": [
-      "error",
-      2,
-      {
-        "SwitchCase": 1
-      }
-    ],
-    "semi": [
-      "error",
-      "never",
-      {
-        "beforeStatementContinuationChars": "never"
-      }
-    ],
-    "semi-spacing": [
-      "error",
-      {
-        "after": true,
-        "before": false
-      }
-    ],
-    "semi-style": [
-      "error",
-      "first"
-    ],
-    "no-extra-semi": "error",
-    "no-unexpected-multiline": "error",
-    "no-unreachable": "error"
+    "prettier/prettier": "error"
+    // "indent": [
+    //   "error",
+    //   2
+    //   ,{
+    //     "SwitchCase": 1
+    //   }
+    // ],
+    // "semi": [
+    //   "error",
+    //   "never",
+    //   {
+    //     "beforeStatementContinuationChars": "never"
+    //   }
+    // ],
+    // "semi-spacing": [
+    //   "error",
+    //   {
+    //     "after": true,
+    //     "before": false
+    //   }
+    // ],
+    // "semi-style": [
+    //   "error",
+    //   "first"
+    // ],
+    // "no-extra-semi": "error",
+    // "no-unexpected-multiline": "error",
+    // "no-unreachable": "error"
   }
 }
