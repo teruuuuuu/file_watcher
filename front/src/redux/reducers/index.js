@@ -1,5 +1,5 @@
 import { combineReducers } from "redux";
-import settings from "./settings";
+import fileSettings from "./fileSettings";
 import tabs from "./tabs";
 
-export default combineReducers({ settings, tabs });
+export default combineReducers({ fileSettings, tabs });

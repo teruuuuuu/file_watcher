@@ -5,14 +5,14 @@ import { SettingItem } from "./Contents/SettingItem";
 import { saveSetting, delSetting, addTab, delTab } from "../redux/actions";
 import { FileView } from "./Contents/FileView";
 import { FileSetting } from "../class/FileSetting";
-import { dbService } from "../App";
+import { fileSettingRepo } from "../App";
 
 class ContentsArea extends React.Component {
   constructor(props) {
     super(props);
     this.state = { whiteout: 0 };
 
-    dbService.getAll((d) => this.props.saveSetting(d));
+    fileSettingRepo.getAll((d) => this.props.saveSetting(d));
   }
 
   componentDidUpdate(prevProps) {}
@@ -24,7 +24,7 @@ class ContentsArea extends React.Component {
   saveSetting(setting, isOpen) {
     const settingIdGen = (settingId) =>
       settingId == -1
-        ? this.props.settings
+        ? this.props.fileSettings
             .map((a) => a.id)
             .concat(-1)
             .reduce((a, b) => Math.max(a, b)) + 1
@@ -48,7 +48,7 @@ class ContentsArea extends React.Component {
   }
 
   settingView() {
-    const { settings, tabs } = this.props;
+    const { fileSettings, tabs } = this.props;
     const { whiteout } = this.state;
     const delMehtod = (id) => this.delSetting(id);
     const saveMethod = (setting, isOpen) => this.saveSetting(setting, isOpen);
@@ -58,7 +58,7 @@ class ContentsArea extends React.Component {
         style={{ display: tabs.activeId == -1 ? "block" : "none" }}
       >
         <div className="list-item">
-          {settings
+          {fileSettings
             .map((setting) => (
               <SettingItem
                 key={setting.id}
@@ -115,7 +115,7 @@ class ContentsArea extends React.Component {
   }
 
   fileView() {
-    const { settings, tabs } = this.props;
+    const { fileSettings, tabs } = this.props;
     return (
       <div
         className="file-view-area"
@@ -126,7 +126,8 @@ class ContentsArea extends React.Component {
           .map((id) => (
             <FileView
               key={id}
-              setting={settings.find((setting) => setting.id == id)}
+              id={id}
+              setting={fileSettings.find((setting) => setting.id == id)}
               isActive={id == tabs.activeId}
             ></FileView>
           ))}
@@ -145,8 +146,8 @@ class ContentsArea extends React.Component {
 }
 
 const mapStateToProps = (state) => {
-  const { settings, tabs } = state;
-  return { settings, tabs };
+  const { fileSettings, tabs } = state;
+  return { fileSettings, tabs };
 };
 
 export default connect(mapStateToProps, {

@@ -1,5 +1,5 @@
 import { SAVE_SETTING, DEL_SETTING } from "../actionTypes";
-import { dbService } from "../../App";
+import { fileSettingRepo } from "../../App";
 
 const initialState = [];
 
@@ -18,12 +18,12 @@ export default function (state = initialState, action) {
           return state.concat(action.setting);
         }
       })(curSetting);
-      dbService.save(newSetting);
+      fileSettingRepo.save(newSetting);
 
       return newSetting;
     case DEL_SETTING:
       let index = state.findIndex((a) => a.id == action.id);
-      dbService.delete([action.id]);
+      fileSettingRepo.delete([action.id]);
       return state.slice(0, index).concat(state.slice(index + 1));
     default:
       return state;

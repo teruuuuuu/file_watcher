@@ -19,7 +19,7 @@ class Header extends React.Component {
   }
 
   render() {
-    const { settings, tabs } = this.props;
+    const { fileSettings, tabs } = this.props;
     return (
       <div className="header">
         {tabs.ids.map((id) => (
@@ -37,7 +37,7 @@ class Header extends React.Component {
             >
               {id == -1
                 ? "設定"
-                : settings.find((setting) => setting.id == id).name}
+                : fileSettings.find((setting) => setting.id == id).name}
             </div>
             <img
               onClick={(e) => this.delTab(id, e)}
@@ -59,8 +59,8 @@ class Header extends React.Component {
 }
 
 const mapStateToProps = (state) => {
-  const { settings, tabs } = state;
-  return { settings, tabs };
+  const { fileSettings, tabs } = state;
+  return { fileSettings, tabs };
 };
 // export default VisibilityFilters;
 export default connect(mapStateToProps, { changeTab, delTab })(Header);

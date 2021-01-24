@@ -2,62 +2,69 @@ export class DbService {
   constructor() {
     this.dbName = "myDb";
     this.dbVersion = 1;
-    this.storeName = "myStore";
-    this.initDbCon(this.dbName, this.dbVersion);
-    this.initActions = [];
+    // this.storeName = "myStore";
+    // this.initDbCon(this.dbName, this.dbVersion);
+    this.callbackActions = [];
+    this.stores = [];
   }
 
-  initDbCon(dbName, dbVersion) {
-    const request = indexedDB.open(dbName, dbVersion);
+  addStore(store) {
+    this.stores.push(store);
+  }
+
+  init() {
+    const request = indexedDB.open(this.dbName, this.dbVersion);
     request.onerror = (event) => {
       console.log("Error init db");
-      indexedDB.deleteDatabase(dbName);
+      indexedDB.deleteDatabase(this.dbName);
     };
     request.onupgradeneeded = (event) => {
       this.dbCon = event.target.result;
       Array.from(this.dbCon.objectStoreNames).forEach((storeName) =>
         this.dbCon.deleteObjectStore(storeName)
       );
-      this.dbCon.createObjectStore(this.storeName, { keyPath: "id" });
+      this.stores.forEach((store) => {
+        this.dbCon.createObjectStore(store[0], store[1]);
+      });
     };
     request.onsuccess = (event) => {
       this.dbCon = event.target.result;
       while (true) {
-        if (this.initActions.length == 0) {
+        if (this.callbackActions.length == 0) {
           break;
         } else {
-          this.initActions.shift()();
+          this.callbackActions.shift()();
         }
       }
     };
   }
-  save(datas) {
-    const transaction = this.dbCon.transaction([this.storeName], "readwrite");
+  save(storName, datas) {
+    const transaction = this.dbCon.transaction([storName], "readwrite");
     transaction.onerror = (e) => console.log("indexed db command error");
-    var store = transaction.objectStore(this.storeName);
+    var store = transaction.objectStore(storName);
     datas.forEach((d) => store.put(d));
   }
-  delete(datas) {
-    const transaction = this.dbCon.transaction([this.storeName], "readwrite");
+  delete(storName, datas) {
+    const transaction = this.dbCon.transaction([storName], "readwrite");
     transaction.onerror = (e) => console.log("indexed db command error");
-    var store = transaction.objectStore(this.storeName);
+    var store = transaction.objectStore(storName);
     datas.forEach((d) => store.delete(d));
   }
 
-  query(keys, action) {
-    const transaction = this.dbCon.transaction([this.storeName], "readonly");
+  query(storName, key, action) {
+    const transaction = this.dbCon.transaction([storName], "readonly");
     transaction.onerror = (e) => console.log("indexed db querry error");
-    var store = transaction.objectStore(this.storeName);
-    keys.forEach((k) => {
-      var req = store.get(k);
-      req.onsuccess = action;
-    });
+    var store = transaction.objectStore(storName);
+    store.get(key).onsuccess = function (event) {
+      const data = event.target.result;
+      action(data);
+    };
   }
 
-  getAll(action) {
+  getAll(storName, action) {
     const f = ((action) => () => {
-      const transaction = this.dbCon.transaction([this.storeName], "readonly");
-      var objectStore = transaction.objectStore(this.storeName);
+      const transaction = this.dbCon.transaction([storName], "readonly");
+      var objectStore = transaction.objectStore(storName);
       objectStore.getAll().onsuccess = function (event) {
         const rows = event.target.result;
         action(rows);
@@ -66,7 +73,7 @@ export class DbService {
     if (this.dbCon) {
       f();
     } else {
-      this.initActions.push(f);
+      this.callbackActions.push(f);
     }
   }
 }
