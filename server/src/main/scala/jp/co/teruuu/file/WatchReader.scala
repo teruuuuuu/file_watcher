@@ -1,7 +1,7 @@
 package jp.co.teruuu.file
 
 import akka.actor.ActorRef
-import jp.co.teruuu.message.{MessageObject, ReadRequest, ReadResult, SelectFile}
+import jp.co.teruuu.message.{MessageObject, ReadRequest, ReadResult, SearchSetting, SelectFile}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -16,7 +16,7 @@ class WatchReader(down: ActorRef) {
       try {
         if (tailOn && watchFileOpt.isDefined) {
           readBottom(50) match {
-            case a if a.nonEmpty => down ! MessageObject.toMessage(ReadResult(isBottom = true, a))
+            case a if a._2.nonEmpty => down ! MessageObject.toMessage(ReadResult(a._1, a._2))
             case _ =>
           }
         }
@@ -44,8 +44,11 @@ class WatchReader(down: ActorRef) {
     fileEvent match {
       case a: SelectFile =>
         selectFile(a)
-      case a: ReadRequest =>
-        down ! MessageObject.toMessage(ReadResult(isBottom = true, readBottom(a.lineNum)))
+      case a: ReadRequest => readBottom(a.lineNum)  match { case (fromLine, list) =>
+        down ! MessageObject.toMessage(ReadResult(fromLine, list))
+      }
+      case a: SearchSetting =>
+        println(a)
       case _ => {}
     }
   }
@@ -63,11 +66,11 @@ class WatchReader(down: ActorRef) {
     }
   }
 
-  def readBottom(lineNum: Int): List[String] = {
+  def readBottom(lineNum: Int): (Int, List[String]) = {
     watchFileOpt match {
       case Some(watchFile) =>
-        watchFile.readLines(lineNum)
-      case _ => List.empty[String]
+        watchFile.readWithIndex(lineNum)
+      case _ => (0, List.empty[String])
     }
   }
 

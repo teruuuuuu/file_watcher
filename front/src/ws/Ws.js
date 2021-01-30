@@ -17,6 +17,10 @@ export class WS {
     this.handlers = [];
   }
 
+  close() {
+    this.socket.close();
+  }
+
   addReadResultHandler(handler) {
     this.handlers.push(handler);
   }
@@ -30,7 +34,7 @@ export class WS {
   }
 
   onMessage(e) {
-    console.log("receive" + e.data);
+    // console.log("receive" + e.data);
     const message = e.data.split(RecordSeparator);
     if (message[0] == "ReadResult") {
       const readResult = new ReadResult(JSON.parse(message[1]));
@@ -43,6 +47,9 @@ export class WS {
   }
   sendReadRequest(readRequest) {
     this.sendMessage("ReadRequest", readRequest);
+  }
+  sendSearchRequest(searchSetting) {
+    this.sendMessage("SearchSetting", searchSetting);
   }
   sendMessage(type, data) {
     try {

@@ -47,7 +47,8 @@ object Route {
         case Success(flow) =>
           println("websocket onComplete")
           handleWebSocketMessages(flow)
-        case Failure(err) => complete(err.toString)
+        case Failure(err) =>
+          complete(err.toString)
       }
 
     }

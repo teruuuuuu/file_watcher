@@ -15,10 +15,13 @@ class SftpFile(host: String, port: Int, user: String, password: String, filePath
   var lineIndex = 0
   val buf = new Array[Byte](1024)
 
-  override def readLines(length: Int): List[String] = {
-    if(length > 0) {
+  override def readWithIndex(lineNum: Int): (Int, List[String]) =
+    (lineIndex, readLines(lineNum))
+
+  override def readLines(lineNum: Int): List[String] = {
+    if(lineNum > 0) {
       readOneLine() match {
-        case Some(s) => s :: readLines(length - 1)
+        case Some(s) => s :: readLines(lineNum - 1)
         case _ => List.empty[String]
       }
     } else {
@@ -43,6 +46,13 @@ class SftpFile(host: String, port: Int, user: String, password: String, filePath
     }
   }
 
+  /**
+   * バッファ内の改行の開始、終了位置を取得して返す。
+   * 改行がなければ(-1,-1)を返す。
+   * @param buf
+   * @param length
+   * @return
+   */
   private def indexOfKaigyou(buf: Array[Byte], length: Int): (Int, Int) = {
     for (i <- 0 to length) {
       if (buf(i) == 13) {
@@ -63,7 +73,7 @@ class SftpFile(host: String, port: Int, user: String, password: String, filePath
     ssh.addHostKeyVerifier(new PromiscuousVerifier)
     ssh.loadKnownHosts()
     ssh.connect(host, port)
-    // keepAliveの感覚設定
+    // keepAliveの間隔設定
     ssh.getConnection.getKeepAlive.setKeepAliveInterval(30)
     // 接続時のsshキーの指定はauthPublickeyを認証時のパスワードにはauthPasswordを使う
     // ssh.authPublickey(keyPath);

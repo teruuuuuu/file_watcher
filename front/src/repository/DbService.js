@@ -76,4 +76,11 @@ export class DbService {
       this.callbackActions.push(f);
     }
   }
+
+  clear(storeName) {
+    const transaction = this.dbCon.transaction([storeName], "readwrite");
+    transaction.onerror = (e) => console.log("indexed db command error");
+    var store = transaction.objectStore(storeName);
+    store.clear();
+  }
 }

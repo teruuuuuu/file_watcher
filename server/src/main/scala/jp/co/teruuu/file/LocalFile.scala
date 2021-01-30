@@ -22,10 +22,13 @@ class LocalFile(filePath: String, charCode: String) extends WatchFile {
     println("localFile close end")
   }
 
+  override def readWithIndex(lineNum: Int): (Int, List[String]) =
+    (lineIndex, readLines(lineNum))
+
   override def readLines(lineNum: Int): List[String] = {
     def bufRead(buf: Array[Char], readSize: Int, readOffset: Int): Option[(String, Int)] = {
       val (nextBufOffset, readLength) = indexOfKaigyou(buf, readSize, readOffset)
-      if(nextBufOffset >= 0) {
+      if (nextBufOffset >= 0) {
         bufReadOffset = nextBufOffset
         lineIndex += 1
         Some(buf.slice(readOffset, readLength).mkString, nextBufOffset)
@@ -35,7 +38,7 @@ class LocalFile(filePath: String, charCode: String) extends WatchFile {
     }
 
     def bufReadLine(buf: Array[Char], readSize: Int, bufOffset: Int, lineNum: Int): List[String] = {
-      if(lineNum == 0) {
+      if (lineNum == 0) {
         List.empty[String]
       } else {
         bufRead(buf, readSize, bufOffset) match {
@@ -47,10 +50,12 @@ class LocalFile(filePath: String, charCode: String) extends WatchFile {
       }
     }
 
-    if(bufReadOffset != 0) {
+    // バッファに対して既に読み込みがある場合、
+    // 未読の部分を前に寄せて、後ろに新規読み込み分を追加する
+    if (bufReadOffset != 0) {
       val bufTemp = new Array[Char](1024)
-      for(i <- bufReadOffset until buf.length) {
-        bufTemp(i-bufReadOffset) = buf(i)
+      for (i <- bufReadOffset until buf.length) {
+        bufTemp(i - bufReadOffset) = buf(i)
       }
       buf = bufTemp
       bufReadOffset = buf.length - bufReadOffset
@@ -58,18 +63,18 @@ class LocalFile(filePath: String, charCode: String) extends WatchFile {
     val readSize = reader.read(buf, bufReadOffset, buf.length - bufReadOffset)
     bufReadOffset = 0
     val a = bufReadLine(buf, buf.length, 0, lineNum) match {
-      case a if a.nonEmpty & a.length < lineNum=> {
+      case a if a.nonEmpty & a.length < lineNum => {
         a ::: readLines(lineNum - a.length)
       }
       case a => {
         a
       }
     }
-    if(readSize == -1) {
-
+    if (readSize == -1) {
+      // TODO なおす
       val b = buf.slice(bufReadOffset, buf.length).mkString.trim()
       buf = new Array[Char](1024)
-      if(b.length > 0) {
+      if (b.length > 0) {
         a ::: List(b)
       } else {
         a
@@ -79,6 +84,13 @@ class LocalFile(filePath: String, charCode: String) extends WatchFile {
     }
   }
 
+  /**
+   * buf内のoffsetからlengthの区間で改行の前後をタプルで返す。見つからなければ(-1,-1)を返す
+   * @param buf
+   * @param length
+   * @param offset
+   * @return
+   */
   private def indexOfKaigyou(buf: Array[Char], length: Int, offset: Int): (Int, Int) = {
     for (i <- offset until length) {
       if (buf(i) == 13) {

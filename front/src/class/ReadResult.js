@@ -1,6 +1,6 @@
 export class ReadResult {
-  constructor({ isBottom = true, lines = [] }) {
-    this.isBottom = isBottom;
+  constructor({ index = -1, lines = [] }) {
+    this.index = index;
     this.lines = lines;
   }
 }
