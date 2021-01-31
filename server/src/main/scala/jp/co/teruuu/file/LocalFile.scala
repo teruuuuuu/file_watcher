@@ -15,6 +15,8 @@ class LocalFile(filePath: String, charCode: String) extends WatchFile {
   var buf = new Array[Char](1024)
   var bufReadOffset = 0
 
+  override def getClone() = new LocalFile(filePath, charCode)
+
   override def close(): Unit = {
     println("localFile close start")
     reader.close()
@@ -27,8 +29,9 @@ class LocalFile(filePath: String, charCode: String) extends WatchFile {
 
   override def readLines(lineNum: Int): List[String] = {
     def bufRead(buf: Array[Char], readSize: Int, readOffset: Int): Option[(String, Int)] = {
-      val (nextBufOffset, readLength) = indexOfKaigyou(buf, readSize, readOffset)
-      if (nextBufOffset >= 0) {
+      val (nextBufOffset, readLength, isNull) = indexOfKaigyou(buf, readSize, readOffset)
+      if (nextBufOffset >= 0 && !(isNull && readLength == readOffset)) {
+        // 改行があり、Null文字での空行以外
         bufReadOffset = nextBufOffset
         lineIndex += 1
         Some(buf.slice(readOffset, readLength).mkString, nextBufOffset)
@@ -62,7 +65,7 @@ class LocalFile(filePath: String, charCode: String) extends WatchFile {
     }
     val readSize = reader.read(buf, bufReadOffset, buf.length - bufReadOffset)
     bufReadOffset = 0
-    val a = bufReadLine(buf, buf.length, 0, lineNum) match {
+    bufReadLine(buf, buf.length, 0, lineNum) match {
       case a if a.nonEmpty & a.length < lineNum => {
         a ::: readLines(lineNum - a.length)
       }
@@ -70,18 +73,19 @@ class LocalFile(filePath: String, charCode: String) extends WatchFile {
         a
       }
     }
-    if (readSize == -1) {
-      // TODO なおす
-      val b = buf.slice(bufReadOffset, buf.length).mkString.trim()
-      buf = new Array[Char](1024)
-      if (b.length > 0) {
-        a ::: List(b)
-      } else {
-        a
-      }
-    } else {
-      a
-    }
+//    if (readSize == -1) {
+//      // TODO なおす
+//      val b = buf.slice(bufReadOffset, buf.length).mkString.trim()
+//      buf = new Array[Char](1024)
+//      if (b.length > 0) {
+//        a ::: List(b)
+//      } else {
+//        a
+//      }
+//    } else {
+//      a
+//    }
+//    a
   }
 
   /**
@@ -89,20 +93,26 @@ class LocalFile(filePath: String, charCode: String) extends WatchFile {
    * @param buf
    * @param length
    * @param offset
-   * @return
+   * @return (改行文字前インデックス, 改行文字後インデックス, NULL文字かどうか)
    */
-  private def indexOfKaigyou(buf: Array[Char], length: Int, offset: Int): (Int, Int) = {
+  private def indexOfKaigyou(buf: Array[Char], length: Int, offset: Int): (Int, Int, Boolean) = {
     for (i <- offset until length) {
       if (buf(i) == 13) {
         if (i + 1 < length && buf(i + 1) == 10) {
-          return (i + 2, i)
+          // CRLF
+          return (i + 2, i, false)
         } else {
-          return (i + 1, i)
+          // CR
+          return (i + 1, i, false)
         }
       } else if (buf(i) == 10) {
-        return (i + 1, i)
+        // LF
+        return (i + 1, i, false)
+      } else if (buf(i) == 0) {
+        // NULL文字も改行として扱う(最終行での改行文字なし想定)
+        return (i + 1, i, true)
       }
     }
-    (-1, -1)
+    (-1, -1, false)
   }
 }

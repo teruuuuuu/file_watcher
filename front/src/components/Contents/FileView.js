@@ -17,6 +17,8 @@ export class FileView extends React.Component {
     this.keyPressHandler = keyPressHandler;
     this.keyEvent = (e) => this.keyPress(e);
     this.fileResponse = (readResult) => this.readResultMethod(readResult);
+    this.searchResponse = (searchResult) =>
+      this.searchResultMethod(searchResult);
     // 描画対象行数
     this.VIEW_LENGTH = 100;
     // キャッシュ単位
@@ -86,6 +88,7 @@ export class FileView extends React.Component {
   wsActive() {
     const { setting } = this.props;
     ws.addReadResultHandler(this.fileResponse);
+    ws.addSearchResultHandler(this.searchResponse);
     ws.sendSettingFile(setting);
 
     if (!setting.tail) {
@@ -95,9 +98,11 @@ export class FileView extends React.Component {
 
   wsUnActive() {
     ws.removeReadResultHandler(this.fileResponse);
+    ws.removeSearchResultHandler(this.searchResponse);
   }
 
   readFile(lineNum) {
+    this.readRequested = true;
     ws.sendReadRequest(new ReadRequest({ isBottom: true, lineNum: lineNum }));
   }
 
@@ -137,6 +142,25 @@ export class FileView extends React.Component {
     }
   }
 
+  searchResultMethod(searchResult) {
+    const { tail } = this.props.setting;
+    const { findContent, searching } = this.state;
+    if (!tail) {
+      this.setState({
+        searching: false,
+        findContent: searchResult.searchResult,
+      });
+    } else {
+      if (searching) {
+        this.setState({
+          findContent: findContent
+            .concat(searchResult.searchResult)
+            .slice(-this.VIEW_LENGTH),
+        });
+      }
+    }
+  }
+
   initialState() {
     return {
       showFile: true,
@@ -153,6 +177,7 @@ export class FileView extends React.Component {
       // bottomRequested: false,
       searchSelect: "regexp",
       searchSettingValues: [],
+      searching: false,
     };
   }
 
@@ -212,14 +237,13 @@ export class FileView extends React.Component {
       ? ["#778093", "#596275", "#303952", "#1f2535"]
       : ["#778093", "#778093", "#778093", "#778093"];
     const fileStyle = {
-      display: showFile ? "block" : "none",
+      display: showFile ? "grid" : "none",
       backgroundColor: "black",
       lineBreak: "anywhere",
       color: "rgb(154 174 153)",
       border: "3px solid rgb(34 102 255)",
       lineHeight: "16px",
       overflow: "hidden",
-      display: "grid",
       gridTemplateColumns: "1fr 20px",
     };
     const scrollBarStyle = {
@@ -484,7 +508,17 @@ export class FileView extends React.Component {
   }
 
   searchView() {
-    const { searchSelect, showSetting } = this.state;
+    const { searchSelect, showSetting, searching } = this.state;
+    const searchButtonStyle = {
+      background: searching ? "rgb(49, 78, 222)" : "rgb(119, 139, 235)",
+      color: "#DDD",
+      textAlign: "center",
+      margin: "5px 3px 0px 3px",
+      borderRadius: "10px",
+      border: "1px solid rgb(84, 109, 229)",
+      cursor: "pointer",
+      userSelect: "none",
+    };
     return (
       <div
         className="search"
@@ -501,6 +535,9 @@ export class FileView extends React.Component {
         >
           <option value="regexp">正規表現</option>
         </select>
+        <div style={searchButtonStyle} onClick={(e) => this.clickSearch()}>
+          検索
+        </div>
         {this.searchSetting()}
       </div>
     );
@@ -512,12 +549,12 @@ export class FileView extends React.Component {
       display: showFind ? "block" : "none",
       backgroundColor: "white",
       lineBreak: "anywhere",
-      color: "#aef3a9",
+      color: "rgb(49, 78, 222)",
       border: "3px solid rgb(224 224 224)",
-      overflow: "hidden",
+      overflowY: "scroll",
     };
     return (
-      <div style={searchResultStyle}>
+      <div className="searchScroll" style={searchResultStyle}>
         {findContent.slice(findViewIndex).map((content, i) => (
           <div key={i} style={{ marginTop: "3px" }}>
             {content}
@@ -569,6 +606,11 @@ export class FileView extends React.Component {
       "fileScroll"
     )[0];
     fileScroll.scrollTop = fileScroll.scrollHeight;
+
+    const searchScroll = ReactDOM.findDOMNode(this).getElementsByClassName(
+      "searchScroll"
+    )[0];
+    searchScroll.scrollTop = searchScroll.scrollHeight;
   }
 
   clickShowFile() {
@@ -590,7 +632,8 @@ export class FileView extends React.Component {
   }
 
   changeSettings(i, setting) {
-    const { id, searchSelect, searchSettingValues } = this.state;
+    const { id } = this.props.setting;
+    const { searchSelect, searchSettingValues } = this.state;
     const newSearchSettingValues = searchSettingValues
       .splice(0, i)
       .concat([setting])
@@ -601,13 +644,15 @@ export class FileView extends React.Component {
     this.saveSearchSetting(id, searchSelect, newSearchSettingValues);
   }
   addSetting() {
-    const { id, searchSelect, searchSettingValues } = this.state;
+    const { id } = this.props.setting;
+    const { searchSelect, searchSettingValues } = this.state;
     const newSearchSettingValues = searchSettingValues.concat([""]);
     this.setState({ searchSettingValues: newSearchSettingValues });
     this.saveSearchSetting(id, searchSelect, newSearchSettingValues);
   }
   deleteSetting(i) {
-    const { id, searchSelect, searchSettingValues } = this.state;
+    const { id } = this.props.setting;
+    const { searchSelect, searchSettingValues } = this.state;
     const newSearchSettingValues = searchSettingValues
       .splice(0, i)
       .concat(searchSettingValues.splice(i + 1));
@@ -629,7 +674,6 @@ export class FileView extends React.Component {
       };
       searchSettingRepo.save(state);
       this.saveSearchSettingEvId = undefined;
-      ws.sendSearchRequest(state);
     }, 3000);
   }
 
@@ -644,6 +688,23 @@ export class FileView extends React.Component {
       // 下に追加
       this.readFile(100);
       this.readRequested = true;
+    }
+  }
+
+  clickSearch() {
+    const { id, tail } = this.props.setting;
+    const { searching, searchSelect, searchSettingValues } = this.state;
+    ws.sendSearchRequest({
+      id: id,
+      searchSelect: searchSelect,
+      searchSettingValues: searchSettingValues.filter((a) => a !== ""),
+      tail: tail,
+    });
+
+    if (tail) {
+      this.setState({ searching: !searching });
+    } else {
+      this.setState({ searching: true });
     }
   }
 

@@ -3,6 +3,8 @@ package jp.co.teruuu.file
 trait WatchFile {
   def close(): Unit
 
+  def getClone(): WatchFile
+
   /**
    * 読み込み開始行と読み込んだ内容を返す
    * @param lineNum

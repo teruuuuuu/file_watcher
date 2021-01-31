@@ -15,6 +15,8 @@ class SftpFile(host: String, port: Int, user: String, password: String, filePath
   var lineIndex = 0
   val buf = new Array[Byte](1024)
 
+  override def getClone() = new SftpFile(host, port, user, password, filePath, charCode)
+
   override def readWithIndex(lineNum: Int): (Int, List[String]) =
     (lineIndex, readLines(lineNum))
 

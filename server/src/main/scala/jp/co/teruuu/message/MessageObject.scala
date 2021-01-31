@@ -11,7 +11,8 @@ object MessageObject extends DefaultJsonProtocol {
     "user", "password", "filePath", "charCode", "tail")
   implicit val readReqJsFmt = jsonFormat(ReadRequest, "isBottom", "lineNum")
   implicit val readResJsFmt = jsonFormat(ReadResult, "index", "lines")
-  implicit val searchSettingFmt = jsonFormat(SearchSetting, "id", "searchSelect", "searchSettingValues")
+  implicit val searchRequestFmt = jsonFormat(SearchRequest, "id", "searchSelect", "searchSettingValues", "tail")
+  implicit val searchResultFmt = jsonFormat(SearchResult, "id", "searchResult")
   implicit val invJsFmt = jsonFormat0(InvalidMessage.apply)
 
   val RecordSeparator = 30.toChar
@@ -21,8 +22,9 @@ object MessageObject extends DefaultJsonProtocol {
       case "HeartBeat" :: json :: Nil => json.parseJson.convertTo[HeartBeat]
       case "SelectFile" :: json :: Nil => json.parseJson.convertTo[SelectFile]
       case "ReadRequest" :: json :: Nil => json.parseJson.convertTo[ReadRequest]
-      case "SearchSetting" :: json :: Nil => json.parseJson.convertTo[SearchSetting]
+      case "SearchRequest" :: json :: Nil => json.parseJson.convertTo[SearchRequest]
       case "ReadResult" :: json :: Nil => json.parseJson.convertTo[ReadResult]
+//      case "SearchRequest" :: json :: Nil => json.parseJson.convertTo[SearchRequest]
       case _ => InvalidMessage()
     }
   }
@@ -34,6 +36,8 @@ object MessageObject extends DefaultJsonProtocol {
       case a: ReadRequest =>
         a.`type` + RecordSeparator + a.toJson
       case a: ReadResult =>
+        a.`type` + RecordSeparator + a.toJson
+      case a: SearchResult =>
         a.`type` + RecordSeparator + a.toJson
       case a: InvalidMessage =>
         a.`type` + RecordSeparator + a.toJson
@@ -83,7 +87,16 @@ case class ReadResult(index: Int, lines: List[String]) extends MessageObject {
   override val `type` = "ReadResult"
 }
 
-case class SearchSetting(id: Int, searchSelect: String, searchSettingValues: List[String]) extends MessageObject {
-  override val `type` = "SearchSetting"
+//case class SearchSetting(id: Int, searchSelect: String, searchSettingValues: List[String]) extends MessageObject {
+//  override val `type` = "SearchSetting"
+//  override def isFileEvent = true
+//}
+
+case class SearchRequest(id: Int, searchSelect: String, searchSettingValues: List[String], tail: Boolean) extends MessageObject {
+  override val `type` = "SearchRequest"
   override def isFileEvent = true
+}
+
+case class SearchResult(id: Int, searchResult: List[String]) extends MessageObject {
+  override val `type` = "SearchResult"
 }

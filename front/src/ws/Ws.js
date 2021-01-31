@@ -1,4 +1,5 @@
 import { ReadResult } from "../class/ReadResult";
+import { SearchResult } from "../class/SearchResult";
 
 const RecordSeparator = String.fromCharCode(30);
 
@@ -14,7 +15,8 @@ export class WS {
         Object.assign(this.counter, { count: this.counter.count + 1 })
       );
     }, hbInterval);
-    this.handlers = [];
+    this.readResulthandlers = [];
+    this.searchResulthandlers = [];
   }
 
   close() {
@@ -22,15 +24,31 @@ export class WS {
   }
 
   addReadResultHandler(handler) {
-    this.handlers.push(handler);
+    this.readResulthandlers.push(handler);
   }
 
   removeReadResultHandler(handler) {
-    const index = this.handlers.findIndex((a) => a == handler);
-    this.handlers =
+    const index = this.readResulthandlers.findIndex((a) => a == handler);
+    this.readResulthandlers =
       index >= 0
-        ? this.handlers.slice(0, index).concat(this.handlers.slice(index + 1))
-        : this.handlers;
+        ? this.readResulthandlers
+            .slice(0, index)
+            .concat(this.readResulthandlers.slice(index + 1))
+        : this.readResulthandlers;
+  }
+
+  addSearchResultHandler(handler) {
+    this.searchResulthandlers.push(handler);
+  }
+
+  removeSearchResultHandler(handler) {
+    const index = this.searchResulthandlers.findIndex((a) => a == handler);
+    this.searchResulthandlers =
+      index >= 0
+        ? this.searchResulthandlers
+            .slice(0, index)
+            .concat(this.searchResulthandlers.slice(index + 1))
+        : this.searchResulthandlers;
   }
 
   onMessage(e) {
@@ -38,7 +56,10 @@ export class WS {
     const message = e.data.split(RecordSeparator);
     if (message[0] == "ReadResult") {
       const readResult = new ReadResult(JSON.parse(message[1]));
-      this.handlers.forEach((handler) => handler(readResult));
+      this.readResulthandlers.forEach((handler) => handler(readResult));
+    } else if (message[0] == "SearchResult") {
+      const searchResult = new SearchResult(JSON.parse(message[1]));
+      this.searchResulthandlers.forEach((handler) => handler(searchResult));
     }
   }
 
@@ -49,9 +70,10 @@ export class WS {
     this.sendMessage("ReadRequest", readRequest);
   }
   sendSearchRequest(searchSetting) {
-    this.sendMessage("SearchSetting", searchSetting);
+    this.sendMessage("SearchRequest", searchSetting);
   }
   sendMessage(type, data) {
+    console.info(data);
     try {
       if (this.socket.readyState && this.socket.OPEN) {
         this.socket.send(type + RecordSeparator + JSON.stringify(data));
