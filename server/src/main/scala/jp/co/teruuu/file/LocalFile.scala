@@ -88,6 +88,11 @@ class LocalFile(filePath: String, charCode: String) extends WatchFile {
 //    a
   }
 
+  override def toBottom(): Unit = {
+    // TODO
+//    bufReadOffset = file.size
+  }
+
   /**
    * buf内のoffsetからlengthの区間で改行の前後をタプルで返す。見つからなければ(-1,-1)を返す
    * @param buf
@@ -115,4 +120,5 @@ class LocalFile(filePath: String, charCode: String) extends WatchFile {
     }
     (-1, -1, false)
   }
+
 }

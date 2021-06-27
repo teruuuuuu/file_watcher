@@ -5,34 +5,40 @@ ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "jp.co.teruuu"
 ThisBuild / organizationName := "teruuu"
 
-libraryDependencies ++= {
-  val akkaVersion = "2.5.4"
-  val akkaHttpVersion = "10.0.10"
-  Seq(
-    "com.hierynomus" % "sshj" % "0.30.0",
-    "com.typesafe.akka" %% "akka-actor" % akkaVersion,
-    //<start id="stream-dependencies">
-    "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-    //<end id="stream-dependencies">
-    //<start id="stream-http-dependencies">
-    "com.typesafe.akka" %% "akka-http-core"       % akkaHttpVersion,
-    "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion,
-    "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
-    //<end id="stream-http-dependencies">
-    //<start id="test-dependencies">
-    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test",
-    "com.typesafe.akka" %% "akka-testkit"        % akkaVersion % "test",
-    "org.scalatest"     %% "scalatest"           % "3.0.0" % "test"
-    //<end id="test-dependencies">
-  )
-}
-
-
 lazy val root = (project in file("."))
   .settings(
     name := "server",
+    mainClass := Some("jp.co.teruuu.FileWatcher"),
+    assembly / mainClass := Some("jp.co.teruuu.FileWatcher"),
+    assembly / assemblyJarName := "filewWatcher.jar",
+    assemblyMergeStrategy := {
+      case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
+      case _ => MergeStrategy.first
+    },
+    libraryDependencies ++= {
+      val akkaVersion = "2.5.4"
+      val akkaHttpVersion = "10.0.10"
+      Seq(
+        "com.hierynomus" % "sshj" % "0.30.0",
+        "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+        //<start id="stream-dependencies">
+        "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+        //<end id="stream-dependencies">
+        //<start id="stream-http-dependencies">
+        "com.typesafe.akka" %% "akka-http-core"       % akkaHttpVersion,
+        "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion,
+        "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+        //<end id="stream-http-dependencies">
+        //<start id="test-dependencies">
+        //    "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test",
+        //    "com.typesafe.akka" %% "akka-testkit"        % akkaVersion % "test",
+        "org.scalatest"     %% "scalatest"           % "3.0.0" % "test"
+        //<end id="test-dependencies">
+      )
+    },
     libraryDependencies += scalaTest % Test
   )
+
 
 // Uncomment the following for publishing to Sonatype.
 // See https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html for more detail.

@@ -26,6 +26,13 @@ object FileWatcher extends App {
       case Success(value) => println(s"Http bind Success: ${value}")
       case Failure(err) => println(s"Http bind Failure: ${err}")
     }
+
+  Http()
+    .bindAndHandle(Route.httpRoute, "0.0.0.0", 8124)
+    .onComplete {
+      case Success(value) => println(s"Http bind Success: ${value}")
+      case Failure(err) => println(s"Http bind Failure: ${err}")
+    }
 }
 
 object Route {
@@ -51,6 +58,14 @@ object Route {
           complete(err.toString)
       }
 
+    }
+
+  val httpRoute =
+//    pathEndOrSingleSlash {
+//      getFromFile("test.html")
+//    }
+    path(Segment) { name =>
+      getFromResource(s"$name") // uses implicit ContentTypeResolver
     }
 }
 

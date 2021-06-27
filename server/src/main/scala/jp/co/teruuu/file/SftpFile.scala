@@ -11,7 +11,7 @@ class SftpFile(host: String, port: Int, user: String, password: String, filePath
   lazy val file: RemoteFile = sftpClient.open(filePath)
   var fileNameOpt = Option.empty[String]
 
-  var readIndex = 0
+  var readIndex:Long = 0
   var lineIndex = 0
   val buf = new Array[Byte](1024)
 
@@ -29,6 +29,10 @@ class SftpFile(host: String, port: Int, user: String, password: String, filePath
     } else {
       List.empty[String]
     }
+  }
+
+  override def toBottom(): Unit = {
+    readIndex = file.length
   }
 
   def readOneLine(): Option[String] = {

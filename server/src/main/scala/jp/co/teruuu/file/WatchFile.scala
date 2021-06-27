@@ -18,4 +18,10 @@ trait WatchFile {
    * @return
    */
   def readLines(lineNum: Int): List[String]
+
+
+  /**
+   * ストリームの読み込み位置を末尾にセット
+   */
+  def toBottom(): Unit
 }

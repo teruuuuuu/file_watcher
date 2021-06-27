@@ -1,34 +1,34 @@
-const webpack = require('webpack');
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const webpack = require("webpack");
+const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
 module.exports = {
-  mode: 'development',
+  mode: "development",
   devtool: "inline-source-map",
   entry: {
-    app: './src/index.js'
+    app: "./src/index.js",
   },
   module: {
     rules: [
       {
         test: /\.(js|jsx|ts|tsx)$/,
         exclude: /node_modules/,
-        use: ['babel-loader']
+        use: ["babel-loader"],
       },
       {
         test: /\.tsx?$/,
-        loader: "ts-loader"
+        loader: "ts-loader",
       },
       {
         test: /\.html$/,
-        loader: "html-loader"
+        loader: "html-loader",
       },
       {
-        enforce: 'pre',
+        enforce: "pre",
         test: /\.(js|jsx|ts|tsx)$/,
         exclude: /node_modules/,
-        loader: 'eslint-loader',
+        loader: "eslint-loader",
         options: {
           emitWarning: true,
         },
@@ -53,36 +53,39 @@ module.exports = {
               },
             },
           },
-        ]
+        ],
       },
       {
         test: /\.(jpg|jpeg|gif|png|ico|ttf|otf|eot|svg|woff|woff2)(\?[a-z0-9]+)?$/,
-        loader: 'file-loader'
-      }
-    ]
+        loader: "file-loader",
+      },
+    ],
   },
   resolve: {
-    extensions: ['*', '.js', '.jsx', '.ts', '.tsx']
+    extensions: ["*", ".js", ".jsx", ".ts", ".tsx"],
   },
   output: {
-    path: __dirname + '/dist',
-    publicPath: '/',
-    filename: '[name].bundle.js',
+    path: __dirname + "/dist",
+    publicPath: "/",
+    filename: "[name].bundle.js",
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
-      template: "./index.html"
+      template: "./index.html",
     }),
     new webpack.DefinePlugin({
       // jsonの設定ファイルを読み込んで環境変数にセットする
-      ENV: JSON.stringify(require(path.resolve(__dirname, './env/default.json'))),
-    })
+      ENV: JSON.stringify(
+        require(path.resolve(__dirname, "./env/default.json"))
+      ),
+    }),
   ],
   devServer: {
     open: true,
-    contentBase: './dist',
-    hot: true
-  }
+    contentBase: "./dist",
+    hot: true,
+    port: 8000,
+  },
 };

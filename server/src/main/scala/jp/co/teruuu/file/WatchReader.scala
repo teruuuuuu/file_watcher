@@ -92,6 +92,9 @@ class WatchReader(down: ActorRef) {
     } else {
       watchFileOpt = Some(selectFile)
       tailOn = selectFile.tail
+      if(tailOn) {
+        watchFileOpt.get.toBottom()
+      }
     }
   }
 

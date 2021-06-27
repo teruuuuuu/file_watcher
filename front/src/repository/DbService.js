@@ -2,8 +2,6 @@ export class DbService {
   constructor() {
     this.dbName = "myDb";
     this.dbVersion = 1;
-    // this.storeName = "myStore";
-    // this.initDbCon(this.dbName, this.dbVersion);
     this.callbackActions = [];
     this.stores = [];
   }
